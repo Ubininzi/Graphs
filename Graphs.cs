@@ -28,36 +28,93 @@ namespace Graphs
 			//}
 			CreateAdjacencyList();
 		}
-		public void AddVertex() {
-			//проверка на дубликат
-			Console.WriteLine("Введите название вершины");
-			string id = Console.ReadLine();
-			AdjacencyList.Add(new Vertex(id), new List<Vertex>());
-			Console.WriteLine($"вы создали вершину {id}");
+		private void AddVertex(Vertex vertex) {
+			AdjacencyList.Add(vertex, new List<Vertex>());
 		}
-		public void RemoveVertex(string id) {
-			//AdjacencyList.Values.Select(x => x.Remove(GetVertexId(id)));
-			foreach (var vertices in AdjacencyList.Values) vertices.Remove(GetVertexId(id));
-			AdjacencyList.Remove(GetVertexId(id));
+		private void RemoveVertex(Vertex vertex) {
+			foreach (var vertices in AdjacencyList.Values) vertices.Remove(vertex);
+			AdjacencyList.Remove(vertex);
 		}
-		public void AddEdge(string id1, string id2) {
-			if (id1 == id2) AdjacencyList[GetVertexId(id1)].Add(GetVertexId(id2));
+		private void AddEdge(Vertex vertex1, Vertex vertex2) {
+			if (vertex1 == vertex2) AdjacencyList[vertex1].Add(vertex1);
 			else
 			{
-				AdjacencyList[GetVertexId(id1)].Add(GetVertexId(id2));
-				AdjacencyList[GetVertexId(id2)].Add(GetVertexId(id1));
+				AdjacencyList[vertex1].Add(vertex2);
+				AdjacencyList[vertex2].Add(vertex1);
 			}
 		}
-		public void RemoveEdge(string id1, string id2) {
-			AdjacencyList[GetVertexId(id2)].Remove(GetVertexId(id1));
-			AdjacencyList[GetVertexId(id1)].Remove(GetVertexId(id2));
-        }
-        private void CreateAdjacencyList() {
+		private void RemoveEdge(Vertex vertex1, Vertex vertex2) {
+			AdjacencyList[vertex1].Remove(vertex2);
+			AdjacencyList[vertex2].Remove(vertex1);
+		}
+		private void CreateAdjacencyList() {
 			CreateEdgeList();
 		}
 		private void CreateEdgeList() { }
-		private Vertex GetVertexId(string id) {
+		private Vertex GetVertexById(string id) {
 			return AdjacencyList.Keys.First(x => x.Id == id);
+		}
+		private bool IsVertexExists(string id) {
+			try
+			{
+				GetVertexById(id);
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+
+			return true;
+		}
+		public void UI() {
+			Console.WriteLine(
+				"1. Добавить вершину\n" +
+				"2. Добавить ребро\n" +
+				"3. Удалить вершину\n" +
+				"4. Удалить ребро\n" +
+				"5. Вывести список смежности\n" +
+				"6. Сохранить граф в файл\n" +
+				"7. Выход");
+			string id;
+			List<string> idList = new();
+
+            while (true)
+			{
+				Console.WriteLine("выберете номер операции:");
+				switch (Console.ReadLine())
+				{
+					case "1":
+						Console.WriteLine("введите название новой вершины");
+						id = Console.ReadLine();
+						if (!IsVertexExists(id)) AddVertex(new Vertex(id));
+						else Console.WriteLine("вершина уже существует");
+						break;
+					case "2":
+						Console.WriteLine("введите вершины, между которыми создается ребро(v1,v2)");
+						idList  = Console.ReadLine().Split(",").ToList();
+						AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
+						break;
+					case "3":
+						Console.WriteLine("введите название удаляемой вершины");
+                        id = Console.ReadLine();
+                        if (IsVertexExists(id)) RemoveVertex(GetVertexById(id));
+                        else Console.WriteLine("вершины не существует");
+                        break;
+                    case "4":
+						Console.WriteLine("введите вершины, между которыми удаляется ребро(v1,v2)");
+                        idList = Console.ReadLine().Split(",").ToList();
+                        RemoveEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
+                        break;
+                    case "5"://список смежности
+                    case "6"://граф в файл
+                        break;
+					case "7":
+						return;
+					default:
+						Console.WriteLine("Выбрана несущесвующая операция");
+						break;
+				}
+			}
 		}
 	}
 
@@ -70,15 +127,15 @@ namespace Graphs
 		}
 	}
 
-	class Edge
-	{
-		internal int Id;
-		internal KeyValuePair<Vertex, Vertex> Link;
-		public Edge(int id, KeyValuePair<Vertex, Vertex> link)
-		{
-			Id = id;
-			Link = link;
-		}
-	}
-
+	//class Edge
+	//{
+	//	internal int Id;
+	//	internal KeyValuePair<Vertex, Vertex> Link;
+	//  internal int weight;
+	//	public Edge(int id, KeyValuePair<Vertex, Vertex> link)
+	//	{
+	//		Id = id;
+	//		Link = link;
+	//	}
+	//}
 }
