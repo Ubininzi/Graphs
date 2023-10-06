@@ -4,7 +4,7 @@ namespace Graphs
 {
 	class Graph
 	{
-		internal Dictionary<Vertex, List<Vertex>> AdjacencyList = new();
+		internal Dictionary<Vertex, List<(Vertex,int)>> AdjacencyList = new();
 		internal bool wheighted;
 		internal bool oriented;
 		public Graph(Dictionary<Vertex, List<(Vertex,int)>> vertices, bool wheighted, bool oriented)
@@ -42,30 +42,30 @@ namespace Graphs
 		private void RemoveVertex(Vertex vertex) {
 			if (wheighted)
 			{
-				foreach (var vertices in AdjacencyList.Values) vertices.Remove(new tuple(vertex, 1));//ВЕС
+				foreach (var vertices in AdjacencyList.Values) vertices.Remove((vertex, 1));//ВЕС
 			}
 			else { 
-				foreach (var vertices in AdjacencyList.Values) vertices.Remove(new tuple(vertex, 1));
+				foreach (var vertices in AdjacencyList.Values) vertices.Remove((vertex, 1));
 			}
 			AdjacencyList.Remove(vertex);
 		}
-		private void AddEdge(Vertex vertex1, Vertex vertex) {
-			if (vertex1 == vertex2) AdjacencyList[vertex1].Add(vertex1);
+		private void AddEdge(Vertex vertex1, Vertex vertex2) {
+			if (vertex1 == vertex2) AdjacencyList[vertex1].Add((vertex1,1));
 			else
 			{
 				if (oriented)
 				{
-					AdjacencyList[vertex1].Add(vertex2);
+					AdjacencyList[vertex1].Add((vertex2, 1));
 				}
 				else 
 				{ 
-					AdjacencyList[vertex1].Add(vertex2);
-					AdjacencyList[vertex2].Add(vertex1);
+					AdjacencyList[vertex1].Add((vertex2, 1));
+					AdjacencyList[vertex2].Add((vertex1, 1));
 				}
 
 			}
 		}
-		private void AddEdge(Vertex vertex1, Vertex vertex, int weight)
+		private void AddEdge(Vertex vertex1, Vertex vertex2, int weight)
 		{
 			if (vertex1 == vertex2) AdjacencyList[vertex1].Add((vertex1,weight));
 			else
@@ -84,8 +84,8 @@ namespace Graphs
 		}
 
 		private void RemoveEdge(Vertex vertex1, Vertex vertex2) {
-			AdjacencyList[vertex1].Remove(vertex2);
-			AdjacencyList[vertex2].Remove(vertex1);
+			AdjacencyList[vertex1].Remove((vertex2, 1));		//ВЕС
+			AdjacencyList[vertex2].Remove((vertex1, 1));
 		}
 		private void CreateAdjacencyList(int[][] AdjacencyList) {
 			CreateEdgeList(AdjacencyList);
@@ -136,7 +136,7 @@ namespace Graphs
 						{
 							Console.WriteLine("введите вершины, между которыми создается ребро и вес ребра(v1,v2,wheight)");
 							idList  = Console.ReadLine().Split(",").ToList();
-							AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]),Convert.ToInt(idList[2]));
+							AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]),Convert.ToInt32(idList[2]));
 						}
 						else { 
 						Console.WriteLine("введите вершины, между которыми создается ребро(v1,v2)");// вес ребра
