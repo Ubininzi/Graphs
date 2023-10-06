@@ -5,20 +5,28 @@ namespace Graphs
 	class Graph
 	{
 		internal Dictionary<Vertex, List<Vertex>> AdjacencyList = new();
-		//List<Vertex> Vertices = new();
-		//List<Edge> Edges = new();
-		public Graph(Dictionary<Vertex, List<Vertex>> vertices)
+		internal bool wheighted;
+		internal bool oriented;
+		public Graph(Dictionary<Vertex, List<(Vertex,int)>> vertices, bool wheighted, bool oriented)
 		{
-			AdjacencyList = vertices;
+			this.AdjacencyList = vertices;
+			this.wheighted = wheighted;
+			this.oriented = oriented;
+		}
+		public Graph(Graph graph) {
+			this.AdjacencyList = graph.AdjacencyList;
+			this.oriented = graph.oriented;
+			this.wheighted = graph.wheighted;
 		}
 		public Graph()
 		{
-			AdjacencyList = new Dictionary<Vertex, List<Vertex>>();
+			AdjacencyList = new Dictionary<Vertex, List<(Vertex,int)>>();
+			wheighted = false;
+			oriented = false;
 		}
 		public Graph(string path) {
-			int[][] IncidenceMatrix = File.ReadAllText(path).Split("\n").Select(str => str.Split(",").Select(c => Convert.ToInt32(c)).ToArray()).ToArray();
+			int[][] AdjacencyMatrix = File.ReadAllText(path).Split("\n").Select(str => str.Split(",").Select(c => Convert.ToInt32(c)).ToArray()).ToArray();
 			//Vertices = Enumerable.Range(0,IncidenceMatrix.Length).Select(x => new Vertex(x.ToString())).ToList();
-
 			//for (int i = 0; i < IncidenceMatrix.Length; i++) {
 			//	for (int j = 0; j < IncidenceMatrix[i].Length; j++){
 			//		int FirstEdge, SecEdge;
@@ -26,31 +34,65 @@ namespace Graphs
 			//		}
 			//	}
 			//}
-			CreateAdjacencyList();
+			
 		}
 		private void AddVertex(Vertex vertex) {
-			AdjacencyList.Add(vertex, new List<Vertex>());
+			AdjacencyList.Add(vertex, new List<(Vertex,int)>());
 		}
 		private void RemoveVertex(Vertex vertex) {
-			foreach (var vertices in AdjacencyList.Values) vertices.Remove(vertex);
+			if (wheighted)
+			{
+				foreach (var vertices in AdjacencyList.Values) vertices.Remove(new tuple(vertex, 1));//ВЕС
+			}
+			else { 
+				foreach (var vertices in AdjacencyList.Values) vertices.Remove(new tuple(vertex, 1));
+			}
 			AdjacencyList.Remove(vertex);
 		}
-		private void AddEdge(Vertex vertex1, Vertex vertex2) {
+		private void AddEdge(Vertex vertex1, Vertex vertex) {
 			if (vertex1 == vertex2) AdjacencyList[vertex1].Add(vertex1);
 			else
 			{
-				AdjacencyList[vertex1].Add(vertex2);
-				AdjacencyList[vertex2].Add(vertex1);
+				if (oriented)
+				{
+					AdjacencyList[vertex1].Add(vertex2);
+				}
+				else 
+				{ 
+					AdjacencyList[vertex1].Add(vertex2);
+					AdjacencyList[vertex2].Add(vertex1);
+				}
+
 			}
 		}
+		private void AddEdge(Vertex vertex1, Vertex vertex, int weight)
+		{
+			if (vertex1 == vertex2) AdjacencyList[vertex1].Add((vertex1,weight));
+			else
+			{
+				if (oriented)
+				{
+					AdjacencyList[vertex1].Add((vertex2,weight));
+				}
+				else
+				{
+					AdjacencyList[vertex1].Add((vertex2,weight));
+					AdjacencyList[vertex2].Add((vertex1,weight));
+				}
+
+			}
+		}
+
 		private void RemoveEdge(Vertex vertex1, Vertex vertex2) {
 			AdjacencyList[vertex1].Remove(vertex2);
 			AdjacencyList[vertex2].Remove(vertex1);
 		}
-		private void CreateAdjacencyList() {
-			CreateEdgeList();
+		private void CreateAdjacencyList(int[][] AdjacencyList) {
+			CreateEdgeList(AdjacencyList);
 		}
-		private void CreateEdgeList() { }
+		private void CreateEdgeList(int[][] AdjacencyList) { 
+			
+		}
 		private Vertex GetVertexById(string id) {
 			return AdjacencyList.Keys.First(x => x.Id == id);
 		}
@@ -90,9 +132,15 @@ namespace Graphs
 						else Console.WriteLine("вершина уже существует");
 						break;
 					case "2":
-						Console.WriteLine("введите вершины, между которыми создается ребро(v1,v2)");
-						idList  = Console.ReadLine().Split(",").ToList();
-						AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
+						if (wheighted)
+						{
+							Console.WriteLine("введите вершины, между которыми создается ребро и вес ребра(v1,v2,wheight)");
+							idList  = Console.ReadLine().Split(",").ToList();
+							AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]),Convert.ToInt(idList[2]));
+						}
+						else { 
+						Console.WriteLine("введите вершины, между которыми создается ребро(v1,v2)");// вес ребра
+						}
 						break;
 					case "3":
 						Console.WriteLine("введите название удаляемой вершины");
