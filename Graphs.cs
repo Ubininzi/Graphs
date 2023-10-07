@@ -84,13 +84,26 @@ namespace Graphs
 			AdjacencyList[vertex1].Remove(AdjacencyList[vertex1].First(x => x.Item1 == vertex2));
 			AdjacencyList[vertex2].Remove(AdjacencyList[vertex2].First(x => x.Item1 == vertex1));
 		}
-		private int[,] CreateAdjacencyList() {
-			int[,] matrix = new int[AdjacencyList.Keys.Count,AdjacencyList.Keys.Count];	//каждоой вершине индекс - и позжен добавлять 1 и 0 уже для каждого индекса
-			for (int i = 0; i < AdjacencyList.Keys.Count; i++) {
-				//AdjacencyList.ElementAt(i).Key;
+		private void createAdjacencyList() { }
+		private double[,] CreateAdjacencyMatrix() {
+			double[,] matrix = new double[AdjacencyList.Keys.Count,AdjacencyList.Keys.Count];	
+			List<Vertex> vertexList = AdjacencyList.Keys.ToList();
+			//if (oriented){
+			foreach (Vertex v in vertexList)
+			{
+				foreach (var adjVert in AdjacencyList[v])	// оптимизтровать для неорг графа(симметрия)
+				{
+					matrix[vertexList.IndexOf(v), vertexList.IndexOf(adjVert.Item1)] = 1;
+                }
 			}
-
+			//}else{
+			//}
 			return matrix;
+		}
+		public void printAdjacencyMatrix(double[,] matrix) {
+			foreach (var item in matrix) { 
+				Console.WriteLine($"{item} ");
+			}
 		}
 		private Vertex GetVertexById(string id) {
 			return AdjacencyList.Keys.First(x => x.Id == id);
@@ -155,6 +168,8 @@ namespace Graphs
 						RemoveEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
 						break;
 					case "5"://список смежности
+						CreateAdjacencyMatrix();
+						break;
 					case "6"://граф в файл
 						break;
 					case "7":
