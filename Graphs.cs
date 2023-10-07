@@ -25,16 +25,18 @@ namespace Graphs
 			oriented = false;
 		}
 		public Graph(string path) {
-			//int[,] AdjacencyMatrix = File.ReadAllText(path).Split("\n").Select(str => str.Split(",").Select(c => Convert.ToInt32(c)).ToArray()).ToArray();
-			//Vertices = Enumerable.Range(0,IncidenceMatrix.Length).Select(x => new Vertex(x.ToString())).ToList();
-			//for (int i = 0; i < IncidenceMatrix.Length; i++) {
-			//	for (int j = 0; j < IncidenceMatrix[i].Length; j++){
-			//		int FirstEdge, SecEdge;
-			//		if (IncidenceMatrix[i][j] == 1) {
-			//		}
-			//	}
-			//}
-			
+			double[][] AdjacencyMatrix = File.ReadAllLines(path).Select(str => str.Split(",").Select(c => Convert.ToDouble(c)).ToArray()).ToArray();
+			for (int i = 0; i < AdjacencyMatrix.Length; i++)
+				AddVertex(new Vertex($"V{i+1}"));
+			for (int i = 0; i < AdjacencyMatrix.Length; i++)
+			{
+				for (int j = 0; j < AdjacencyMatrix.Length; j++)
+				{
+					if (AdjacencyMatrix[i][j] > 0) AdjacencyList[((GetVertexById($"V{i + 1}")))].Add(((GetVertexById($"V{j + 1}")), (AdjacencyMatrix[i][j]))); ;
+                    if (!wheighted && (AdjacencyMatrix[i][j] != 1 || AdjacencyMatrix[i][j] != -1)) wheighted = true;
+					if (!oriented && AdjacencyMatrix[i][j] < 0) oriented = true;
+				}
+			}
 		}
 		private void AddVertex(Vertex vertex) {
 			AdjacencyList.Add(vertex, new List<(Vertex,double)>());
@@ -54,58 +56,74 @@ namespace Graphs
 				foreach (var vertices in AdjacencyList.Values) vertices.Remove((vertex, 1));
 			AdjacencyList.Remove(vertex);
 		}
-		private void AddEdge(Vertex vertex1, Vertex vertex2) {
-			if (vertex1 == vertex2) AdjacencyList[vertex1].Add((vertex1,1));
-			else
+		private void AddEdge(Vertex vertex1, Vertex vertex2, double weight = 1)
+		{
+			if (!(AdjacencyList[vertex1].Contains((vertex2,weight)) && (AdjacencyList[vertex2].Contains((vertex1, weight)))))
 			{
-				if (oriented)	AdjacencyList[vertex1].Add((vertex2, 1));
-				else 
-				{ 
-					AdjacencyList[vertex1].Add((vertex2, 1));
-					AdjacencyList[vertex2].Add((vertex1, 1));
+				if (vertex1 == vertex2) AdjacencyList[vertex1].Add((vertex1, weight));
+				else
+				{
+					if (oriented) AdjacencyList[vertex1].Add((vertex2, weight));
+					else
+					{
+						AdjacencyList[vertex1].Add((vertex2, weight));
+						AdjacencyList[vertex2].Add((vertex1, weight));
+					}
 				}
 			}
 		}
-		private void AddEdge(Vertex vertex1, Vertex vertex2, double weight)
-		{
-			if (vertex1 == vertex2) AdjacencyList[vertex1].Add((vertex1,weight));
-			else
-			{
-                if (oriented) AdjacencyList[vertex1].Add((vertex2, weight));
-                else
-                {
-                    AdjacencyList[vertex1].Add((vertex2, weight));
-                    AdjacencyList[vertex2].Add((vertex1, weight));
-                }
-            }
-		}
-
 		private void RemoveEdge(Vertex vertex1, Vertex vertex2) {
 			AdjacencyList[vertex1].Remove(AdjacencyList[vertex1].First(x => x.Item1 == vertex2));
 			AdjacencyList[vertex2].Remove(AdjacencyList[vertex2].First(x => x.Item1 == vertex1));
 		}
-		private void createAdjacencyList() { }
-		private double[,] CreateAdjacencyMatrix() {
-			double[,] matrix = new double[AdjacencyList.Keys.Count,AdjacencyList.Keys.Count];	
+		private void CreateAdjacencyList() { }
+		private double[][] CreateAdjacencyMatrix() {		//запись -1 при выходе вершины в орграфе
 			List<Vertex> vertexList = AdjacencyList.Keys.ToList();
+			double[][] matrix = new double[AdjacencyList.Keys.Count][];
+			foreach (Vertex v in vertexList) matrix[vertexList.IndexOf(v)] = new double[AdjacencyList.Keys.Count];
 			//if (oriented){
 			foreach (Vertex v in vertexList)
 			{
+				matrix[vertexList.IndexOf(v)] = new double[AdjacencyList.Keys.Count];
 				foreach (var adjVert in AdjacencyList[v])	// оптимизтровать для неорг графа(симметрия)
 				{
-					matrix[vertexList.IndexOf(v), vertexList.IndexOf(adjVert.Item1)] = 1;
-                }
+					matrix[vertexList.IndexOf(v)][vertexList.IndexOf(adjVert.Item1)] = adjVert.Item2;
+					if (oriented)	matrix[vertexList.IndexOf(adjVert.Item1)][vertexList.IndexOf(v)] = -adjVert.Item2;
+				}
 			}
 			//}else{
 			//}
 			return matrix;
 		}
-		public void printAdjacencyMatrix(double[,] matrix) {
-			foreach (var item in matrix) { 
-				Console.WriteLine($"{item} ");
+		public void PrintAdjacencyMatrix(double[][] matrix) {
+			for (int i = 0; i < matrix.Length; i++)
+				Console.WriteLine(String.Join("  ", matrix[i]));
+		}
+		public void PrintAdjacencyList() {
+			for (int i = 0; i < AdjacencyList.Count; i++)
+			{
+				Console.Write($"{AdjacencyList.ElementAt(i).Key.Id} : ");
+				Console.WriteLine(String.Join("  ", (AdjacencyList[AdjacencyList.ElementAt(i).Key].Select(x => x.Item1.Id).ToList())));
 			}
 		}
-		private Vertex GetVertexById(string id) {
+		public void WriteAdjacencyMatrixToFile(string path) {
+			double[][] adjMatrix = CreateAdjacencyMatrix();
+			string res = " ";
+			for (int i = 0; i < adjMatrix.Length; i++)
+				res += (String.Join(" ", adjMatrix[i]) + "\n");
+
+		}
+        public void WriteAdjacencyListToFile(string path)
+        {
+			string res = " ";
+            for (int i = 0; i < AdjacencyList.Count; i++)
+            {
+                res += ($"{AdjacencyList.ElementAt(i).Key.Id} : ");
+                res += (String.Join("  ", (AdjacencyList[AdjacencyList.ElementAt(i).Key].Select(x => x.Item1.Id).ToList())) + "\n");
+            }
+        }
+
+        private Vertex GetVertexById(string id) {
 			return AdjacencyList.Keys.First(x => x.Id == id);
 		}
 		private bool IsVertexExists(string id) {
@@ -127,7 +145,7 @@ namespace Graphs
 				"3. Удалить вершину\n" +
 				"4. Удалить ребро\n" +
 				"5. Вывести список смежности\n" +
-				"6. Сохранить граф в файл\n" +
+                "6. Сохранить список смежности в файл\n" +
 				"7. Выход");
 			string id;
 			List<string> idList = new();
@@ -167,10 +185,12 @@ namespace Graphs
 						idList = Console.ReadLine().Split(" ").ToList();
 						RemoveEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
 						break;
-					case "5"://список смежности
-						CreateAdjacencyMatrix();
+					case "5":
+						PrintAdjacencyList();
 						break;
 					case "6"://граф в файл
+						Console.WriteLine("введите путь до файла:");//првоерка на существоание файла?
+						WriteAdjacencyListToFile(Console.ReadLine());				//создание файла если он не существует?
 						break;
 					case "7":
 						return;

@@ -1,4 +1,4 @@
 ﻿using Graphs;
 
-Graph graph = new("C:\\Users\\Максим\\source\\repos\\App1\\Graphs\\TestIncidenceMatrix.csv");
+Graph graph = new("C:\\Users\\Максим\\source\\repos\\App1\\Graphs\\TestAdjacencyMatrix.csv");
 graph.UI();
