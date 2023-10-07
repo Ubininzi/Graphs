@@ -87,7 +87,7 @@ namespace Graphs
 		private int[,] CreateAdjacencyList() {
 			int[,] matrix = new int[AdjacencyList.Keys.Count,AdjacencyList.Keys.Count];	//каждоой вершине индекс - и позжен добавлять 1 и 0 уже для каждого индекса
 			for (int i = 0; i < AdjacencyList.Keys.Count; i++) {
-				AdjacencyList.ElementAt(i).Key;
+				//AdjacencyList.ElementAt(i).Key;
 			}
 
 			return matrix;
