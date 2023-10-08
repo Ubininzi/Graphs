@@ -99,34 +99,11 @@ namespace Graphs
 			//}
 			return matrix;
 		}
-		public void PrintAdjacencyMatrix(double[][] matrix) {
-			for (int i = 0; i < matrix.Length; i++)
-				Console.WriteLine(String.Join("  ", matrix[i]));
-		}
-		public void PrintAdjacencyList() {
-			for (int i = 0; i < AdjacencyList.Count; i++)
-			{
-				Console.Write($"{AdjacencyList.ElementAt(i).Key.Id} : ");
-				Console.WriteLine(String.Join("  ", (AdjacencyList[AdjacencyList.ElementAt(i).Key].Select(x => x.Item1.Id).ToList())));
+		public void printAdjacencyMatrix(double[,] matrix) {
+			foreach (var item in matrix) { 
+				Console.WriteLine($"{item} ");
 			}
 		}
-		public void WriteAdjacencyMatrixToFile(string path) {
-			double[][] adjMatrix = CreateAdjacencyMatrix();
-			string res = " ";
-			for (int i = 0; i < adjMatrix.Length; i++)
-				res += (String.Join(" ", adjMatrix[i]) + "\n");
-
-		}
-		public void WriteAdjacencyListToFile(string path)
-		{
-			string res = " ";
-			for (int i = 0; i < AdjacencyList.Count; i++)
-			{
-				res += ($"{AdjacencyList.ElementAt(i).Key.Id} : ");
-				res += (String.Join("  ", (AdjacencyList[AdjacencyList.ElementAt(i).Key].Select(x => x.Item1.Id).ToList())) + "\n");
-			}
-		}
-
 		private Vertex GetVertexById(string id) {
 			return AdjacencyList.Keys.First(x => x.Id == id);
 		}
@@ -149,7 +126,7 @@ namespace Graphs
 				"3. Удалить вершину\n" +
 				"4. Удалить ребро\n" +
 				"5. Вывести список смежности\n" +
-				"6. Сохранить список смежности в файл\n" +
+				"6. Сохранить граф в файл\n" +
 				"7. Выход");
 			string id;
 			List<string> idList = new();
