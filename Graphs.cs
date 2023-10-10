@@ -46,8 +46,7 @@ namespace Graphs
 		public Graph(string path)
 		{
 			double[][] AdjacencyMatrix = File.ReadAllLines(path).Select(str => str.Split(",").Select(c => Convert.ToDouble(c)).ToArray()).ToArray();
-			for (int i = 0; i < AdjacencyMatrix.Length; i++)
-			{
+			for (int i = 0; i < AdjacencyMatrix.Length; i++) { 
 				AddVertex(new Vertex($"V{i + 1}"));
 			}
 			for (int i = 0; i < AdjacencyMatrix.Length; i++)
@@ -60,7 +59,14 @@ namespace Graphs
 				}
 			}
 		}
-		//public static Graph CompleteGraph() { }
+		public static Graph CompleteGraph(Graph graph1) {
+			Dictionary<Vertex, List<(Vertex, double)>> AdjList = new();
+
+
+
+
+			return new Graph(AdjList,graph1.wheighted,graph1.oriented);
+		}
 		//public static Graph AdditionalGraph() { }
 		//public static Graph GraphUnion() { }
 		//public static Graph GraphIntersection() { }
@@ -247,9 +253,5 @@ namespace Graphs
 				}
 			}
 		}
-
-
-
 	}
-
 }
