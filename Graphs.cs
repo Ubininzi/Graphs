@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Graphs
 {
@@ -59,15 +60,30 @@ namespace Graphs
 				}
 			}
 		}
-		public static Graph CompleteGraph(Graph graph1) {
+		public static Graph CompleteGraph(Graph graph) {
 			Dictionary<Vertex, List<(Vertex, double)>> AdjList = new();
-
-
-
-
-			return new Graph(AdjList,graph1.wheighted,graph1.oriented);
+			foreach (var vertexK in graph.AdjacencyList.Keys)
+			{
+				AdjList.Add(vertexK, new List<(Vertex, double)>());
+				foreach (var VertexV in graph.AdjacencyList.Keys)
+				{
+					if (vertexK != VertexV)	AdjList[vertexK].Add((VertexV, 1));
+				}
+			}
+			return new Graph(AdjList,graph.wheighted,graph.oriented);
 		}
-		//public static Graph AdditionalGraph() { }
+		public static Graph ComplementGraph(Graph graph) {
+			Dictionary<Vertex, List<(Vertex, double)>> AdjList = new();
+			foreach (var vertexK in graph.AdjacencyList.Keys)
+			{
+				AdjList.Add(vertexK, new List<(Vertex, double)>());
+				foreach (var VertexV in graph.AdjacencyList.Keys)
+				{
+					if (!graph.AdjacencyList[vertexK].Any(x => x.Item1 == VertexV) && VertexV != vertexK) AdjList[vertexK].Add((VertexV,1));
+				}
+			}
+			return new Graph(AdjList, graph.wheighted, graph.oriented);
+		}
 		//public static Graph GraphUnion() { }
 		//public static Graph GraphIntersection() { }
 		internal void AddVertex(Vertex vertex)
@@ -114,7 +130,7 @@ namespace Graphs
 			AdjacencyList[vertex2].Remove(AdjacencyList[vertex2].First(x => x.Item1 == vertex1));
 		}
 		internal double[][] CreateAdjacencyMatrix()
-		{       //запись -1 при выходе вершины в орграфе
+		{
 			List<Vertex> vertexList = AdjacencyList.Keys.ToList();
 			double[][] matrix = new double[AdjacencyList.Keys.Count][];
 			foreach (Vertex v in vertexList) matrix[vertexList.IndexOf(v)] = new double[AdjacencyList.Keys.Count];
@@ -130,37 +146,6 @@ namespace Graphs
 			//}else{
 			//}
 			return matrix;
-		}
-		public void PrintAdjacencyMatrix(double[][] matrix)
-		{
-			for (int i = 0; i < matrix.Length; i++)
-				Console.WriteLine(String.Join("  ", matrix[i]));
-		}
-		public void PrintAdjacencyList()
-		{
-			for (int i = 0; i < AdjacencyList.Count; i++)
-			{
-				Console.Write($"{AdjacencyList.ElementAt(i).Key.Id} : ");
-				Console.WriteLine(String.Join("  ", (AdjacencyList[AdjacencyList.ElementAt(i).Key].Select(x => (x.Item1.Id).ToString() +","+ (x.Item2).ToString()).ToList())));
-			}
-		}
-		public void WriteAdjacencyMatrixToFile(string path)
-		{
-			double[][] adjMatrix = CreateAdjacencyMatrix();
-			string res = "";
-			for (int i = 0; i < adjMatrix.Length; i++)
-				res += (String.Join(" ", adjMatrix[i]) + "\n");
-			File.WriteAllText(path, res);
-		}
-		public void WriteAdjacencyListToFile(string path)
-		{
-			string res = "";
-			for (int i = 0; i < AdjacencyList.Count; i++)
-			{
-				res += ($"{AdjacencyList.ElementAt(i).Key.Id} : ");
-				res += (String.Join("  ", (AdjacencyList[AdjacencyList.ElementAt(i).Key].Select(x => x.Item1.Id).ToList())) + "\n");
-			}
-		File.WriteAllText(path, res);
 		}
 		internal Vertex GetVertexById(string id)
 		{
@@ -198,8 +183,9 @@ namespace Graphs
 				"3. Удалить вершину\n" +
 				"4. Удалить ребро\n" +
 				"5. Вывести список смежности\n" +
-				"6. Сохранить список смежности в файл\n" +
-				"7. Выход");
+				"6. Вывести матрицу смежности\n"+
+				"7. Сохранить список смежности в файл\n" +
+				"8. Выход");
 			string id;
 			List<string> idList = new();
 			while (true)
@@ -239,19 +225,54 @@ namespace Graphs
 						graph.RemoveEdge(graph.GetVertexById(idList[0]), graph.GetVertexById(idList[1]));
 						break;
 					case "5":
-						graph.PrintAdjacencyList();
+						PrintAdjacencyList(graph);
 						break;
-					case "6"://граф в файл
+					case "6":
+						PrintAdjacencyMatrix(graph);
+						break;
+					case "7"://граф в файл
 						Console.WriteLine("введите путь до файла:");        //проверка на существоание файла?
-						graph.WriteAdjacencyListToFile(Console.ReadLine());       //создание файла если он не существует?
+						WriteAdjacencyListToFile(Console.ReadLine(), graph);       //создание файла если он не существует?
 						break;
-					case "7":
+					case "8":
 						return;
 					default:
 						Console.WriteLine("Выбрана несущесвующая операция");
 						break;
 				}
 			}
+		}
+		static public void PrintAdjacencyMatrix(Graph graph)
+		{
+			double[][] matrix = graph.CreateAdjacencyMatrix();
+			for (int i = 0; i < matrix.Length; i++)
+				Console.WriteLine(String.Join("  ", matrix[i]));
+		}
+		static public void PrintAdjacencyList(Graph graph)
+		{
+			for (int i = 0; i < graph.AdjacencyList.Count; i++)
+			{
+				Console.Write($"{graph.AdjacencyList.ElementAt(i).Key.Id} : ");
+				Console.WriteLine(String.Join("  ", (graph.AdjacencyList[graph.AdjacencyList.ElementAt(i).Key].Select(x => (x.Item1.Id).ToString() + "," + (x.Item2).ToString()).ToList())));
+			}
+		}
+		static public void WriteAdjacencyMatrixToFile(string path,Graph graph)
+		{
+			double[][] adjMatrix = graph.CreateAdjacencyMatrix();
+			string res = "";
+			for (int i = 0; i < adjMatrix.Length; i++)
+				res += (String.Join(" ", adjMatrix[i]) + "\n");
+			File.WriteAllText(path, res);
+		}
+		static public void WriteAdjacencyListToFile(string path,Graph graph)
+		{
+			string res = "";
+			for (int i = 0; i < graph.AdjacencyList.Count; i++)
+			{
+				res += ($"{graph.AdjacencyList.ElementAt(i).Key.Id} : ");
+				res += (String.Join("  ", (graph.AdjacencyList[graph.AdjacencyList.ElementAt(i).Key].Select(x => x.Item1.Id).ToList())) + "\n");
+			}
+			File.WriteAllText(path, res);
 		}
 	}
 }
