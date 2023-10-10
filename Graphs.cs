@@ -47,7 +47,6 @@ namespace Graphs
 		{
 			double[][] AdjacencyMatrix = File.ReadAllLines(path).Select(str => str.Split(",").Select(c => Convert.ToDouble(c)).ToArray()).ToArray();
 			for (int i = 0; i < AdjacencyMatrix.Length; i++)
-			{
 				AddVertex(new Vertex($"V{i + 1}"));
 			}
 			for (int i = 0; i < AdjacencyMatrix.Length; i++)
