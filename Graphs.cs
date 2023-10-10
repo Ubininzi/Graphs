@@ -1,4 +1,10 @@
-﻿namespace Graphs
+﻿using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+
+
+namespace Graphs
 {
 	class Graph
 	{
@@ -13,7 +19,16 @@
 		}
 		public Graph(Graph graph)
 		{
-			this.AdjacencyList = graph.AdjacencyList;
+			foreach (var item in graph.AdjacencyList) {
+				AddVertex(new Vertex(item.Key.Id));
+			}
+            foreach (var value in graph.AdjacencyList)
+            {
+                foreach (var item in value.Value)
+                {
+					AddEdge(GetVertexById(value.Key.Id), GetVertexById(item.Item1.Id),item.Item2);
+                }
+            }
 			this.oriented = graph.oriented;
 			this.wheighted = graph.wheighted;
 		}
@@ -23,11 +38,19 @@
 			wheighted = false;
 			oriented = false;
 		}
+		public Graph(bool wheighted , bool oriented)
+		{
+			AdjacencyList = new Dictionary<Vertex, List<(Vertex, double)>>();
+			wheighted = false;
+			oriented = false;
+		}
 		public Graph(string path)
 		{
 			double[][] AdjacencyMatrix = File.ReadAllLines(path).Select(str => str.Split(",").Select(c => Convert.ToDouble(c)).ToArray()).ToArray();
 			for (int i = 0; i < AdjacencyMatrix.Length; i++)
+			{
 				AddVertex(new Vertex($"V{i + 1}"));
+			}
 			for (int i = 0; i < AdjacencyMatrix.Length; i++)
 			{
 				for (int j = 0; j < AdjacencyMatrix.Length; j++)
@@ -42,11 +65,11 @@
 		//public static Graph AdditionalGraph() { }
 		//public static Graph GraphUnion() { }
 		//public static Graph GraphIntersection() { }
-		private void AddVertex(Vertex vertex)
+		internal void AddVertex(Vertex vertex)
 		{
 			AdjacencyList.Add(vertex, new List<(Vertex, double)>());
 		}
-		private void RemoveVertex(Vertex vertex)
+		internal void RemoveVertex(Vertex vertex)
 		{
 			if (wheighted)
 			{
@@ -63,11 +86,14 @@
 				foreach (var vertices in AdjacencyList.Values) vertices.Remove((vertex, 1));
 			AdjacencyList.Remove(vertex);
 		}
-		private void AddEdge(Vertex vertex1, Vertex vertex2, double weight = 1)
+		internal void AddEdge(Vertex vertex1, Vertex vertex2, double weight = 1)
 		{
 			if (!(AdjacencyList[vertex1].Contains((vertex2, weight)) && (AdjacencyList[vertex2].Contains((vertex1, weight)))))
 			{
-				if (vertex1 == vertex2 || oriented) AdjacencyList[vertex1].Add((vertex2, weight));
+				if (vertex1 == vertex2 || oriented)
+				{
+					AdjacencyList[vertex1].Add((vertex2, weight));
+				}
 				else
 				{
 					AdjacencyList[vertex1].Add((vertex2, weight));
@@ -75,12 +101,12 @@
 				}
 			}
 		}
-		private void RemoveEdge(Vertex vertex1, Vertex vertex2)
+		internal void RemoveEdge(Vertex vertex1, Vertex vertex2)
 		{
 			AdjacencyList[vertex1].Remove(AdjacencyList[vertex1].First(x => x.Item1 == vertex2));
 			AdjacencyList[vertex2].Remove(AdjacencyList[vertex2].First(x => x.Item1 == vertex1));
 		}
-		private double[][] CreateAdjacencyMatrix()
+		internal double[][] CreateAdjacencyMatrix()
 		{       //запись -1 при выходе вершины в орграфе
 			List<Vertex> vertexList = AdjacencyList.Keys.ToList();
 			double[][] matrix = new double[AdjacencyList.Keys.Count][];
@@ -129,11 +155,11 @@
 			}
 		File.WriteAllText(path, res);
 		}
-		private Vertex GetVertexById(string id)
+		internal Vertex GetVertexById(string id)
 		{
 			return AdjacencyList.Keys.First(x => x.Id == id);
 		}
-		private bool IsVertexExists(string id)
+		internal bool IsVertexExists(string id)
 		{
 			try
 			{
@@ -146,7 +172,18 @@
 
 			return true;
 		}
-		public void UI()
+	}
+	class Vertex
+	{
+		internal string Id;
+		public Vertex(string Id)
+		{
+			this.Id = Id;
+		}
+	}
+	class GraphUI {
+
+		static public void UI(Graph graph)
 		{
 			Console.WriteLine(
 				"1. Добавить вершину\n" +
@@ -166,40 +203,40 @@
 					case "1":
 						Console.WriteLine("введите название новой вершины");
 						id = Console.ReadLine();
-						if (!IsVertexExists(id)) AddVertex(new Vertex(id));
+						if (!graph.IsVertexExists(id)) graph.AddVertex(new Vertex(id));
 						else Console.WriteLine("вершина уже существует");
 						break;
 					case "2":
-						if (wheighted)
+						if (graph.wheighted)
 						{
 							Console.WriteLine("введите вершины, между которыми создается ребро и вес ребра(v1 v2 wheight)");
 							idList = Console.ReadLine().Split(" ").ToList();
-							AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]), Convert.ToDouble(idList[2]));
+							graph.AddEdge(graph.GetVertexById(idList[0]), graph.GetVertexById(idList[1]), Convert.ToDouble(idList[2]));
 						}
 						else
 						{
 							Console.WriteLine("введите вершины, между которыми создается ребро(v1 v2)");
 							idList = Console.ReadLine().Split(" ").ToList();
-							AddEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
+							graph.AddEdge(graph.GetVertexById(idList[0]), graph.GetVertexById(idList[1]));
 						}
 						break;
 					case "3":
 						Console.WriteLine("введите название удаляемой вершины");
 						id = Console.ReadLine();
-						if (IsVertexExists(id)) RemoveVertex(GetVertexById(id));
+						if (graph.IsVertexExists(id)) graph.RemoveVertex(graph.GetVertexById(id));
 						else Console.WriteLine("вершины не существует");
 						break;
 					case "4":
 						Console.WriteLine("введите вершины, между которыми удаляется ребро(v1 v2)");
 						idList = Console.ReadLine().Split(" ").ToList();
-						RemoveEdge(GetVertexById(idList[0]), GetVertexById(idList[1]));
+						graph.RemoveEdge(graph.GetVertexById(idList[0]), graph.GetVertexById(idList[1]));
 						break;
 					case "5":
-						PrintAdjacencyList();
+						graph.PrintAdjacencyList();
 						break;
 					case "6"://граф в файл
-						Console.WriteLine("введите путь до файла:");		//проверка на существоание файла?
-						WriteAdjacencyListToFile(Console.ReadLine());		//создание файла если он не существует?
+						Console.WriteLine("введите путь до файла:");        //проверка на существоание файла?
+						graph.WriteAdjacencyListToFile(Console.ReadLine());       //создание файла если он не существует?
 						break;
 					case "7":
 						return;
@@ -209,14 +246,9 @@
 				}
 			}
 		}
-	}
-	class Vertex
-	{
-		internal string Id;
-		public Vertex(string Id)
-		{
-			this.Id = Id;
-		}
+
+
+
 	}
 
 }
