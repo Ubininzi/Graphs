@@ -84,8 +84,34 @@ namespace Graphs
 			}
 			return new Graph(AdjList, graph.wheighted, graph.oriented);
 		}
-		//public static Graph GraphUnion() { }
-		//public static Graph GraphIntersection() { }
+		public static Graph? UnionGraph(Graph graph1, Graph graph2){	//используется проверка не через названия вершин а через экземпляры класса
+			Dictionary<Vertex, List<(Vertex, double)>> AdjList = new();	//поэтому если вызывать два графа с одинаковыми названиями верщин но с разными экземплярами 
+			if (graph1.AdjacencyList.Keys.Intersect(graph2.AdjacencyList.Keys).Any())   //проверка на уникальность не сработает(хорошо это или плохо?
+				return null;                                                            //- ведь по сути вершины то разные хоть и называются одинаково)
+			foreach (var item in graph1.AdjacencyList)
+				AdjList.Add(item.Key,item.Value);
+			foreach (var item in graph2.AdjacencyList)
+				AdjList.Add(item.Key,item.Value);
+			return new Graph(AdjList, false, false);
+		}
+		public static Graph? IntersectionGraph(Graph graph1, Graph graph2) {
+			Dictionary<Vertex, List<(Vertex, double)>> AdjList = new();
+			if (graph1.AdjacencyList.Keys.Intersect(graph2.AdjacencyList.Keys).Any())
+				return null;
+			foreach (var item in graph1.AdjacencyList) {
+				AdjList.Add(item.Key, item.Value); }
+			foreach (var item in graph2.AdjacencyList) {
+				AdjList.Add(item.Key, item.Value); }
+			Graph gr = new Graph(AdjList, false, false);
+			foreach (var item1 in graph1.AdjacencyList)
+			{
+				foreach (var item2 in graph2.AdjacencyList)
+				{
+					gr.AddEdge(item1.Key,item2.Key);
+				}
+			}
+			return gr;
+		}
 		internal void AddVertex(Vertex vertex)
 		{
 			AdjacencyList.Add(vertex, new List<(Vertex, double)>());
@@ -258,8 +284,8 @@ namespace Graphs
 		}
 		static public void PrintAdjacencyList(Graph graph)
 		{
-            string res = "";
-            for (int i = 0; i < graph.AdjacencyList.Count; i++)
+			string res = "";
+			for (int i = 0; i < graph.AdjacencyList.Count; i++)
 			{
 				res += ($"{graph.AdjacencyList.ElementAt(i).Key.Id} : ");
 				res += (String.Join("  ", (graph.AdjacencyList[graph.AdjacencyList.ElementAt(i).Key].Select(x => (x.Item1.Id).ToString() + "," + (x.Item2).ToString()).ToList())) + "\n");
@@ -270,12 +296,12 @@ namespace Graphs
 		static public void WriteAdjacencyListToFile(string path,Graph graph)
 		{
 			string res = "";
-            for (int i = 0; i < graph.AdjacencyList.Count; i++)
-            {
-                res += ($"{graph.AdjacencyList.ElementAt(i).Key.Id} : ");
-                res += (String.Join("  ", (graph.AdjacencyList[graph.AdjacencyList.ElementAt(i).Key].Select(x => (x.Item1.Id).ToString() + "," + (x.Item2).ToString()).ToList())) + "\n");
-            }
-            File.WriteAllText(path, res);
+			for (int i = 0; i < graph.AdjacencyList.Count; i++)
+			{
+				res += ($"{graph.AdjacencyList.ElementAt(i).Key.Id} : ");
+				res += (String.Join("  ", (graph.AdjacencyList[graph.AdjacencyList.ElementAt(i).Key].Select(x => (x.Item1.Id).ToString() + "," + (x.Item2).ToString()).ToList())) + "\n");
+			}
+			File.WriteAllText(path, res);
 		}
 	}
 }
