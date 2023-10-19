@@ -2,7 +2,6 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Graphs
 {
@@ -84,10 +83,10 @@ namespace Graphs
 			}
 			return new Graph(AdjList, graph.wheighted, graph.oriented);
 		}
-		public static Graph? UnionGraph(Graph graph1, Graph graph2){	//используется проверка не через названия вершин а через экземпляры класса
-			Dictionary<string, List<(string, double)>> AdjList = new();	//поэтому если вызывать два графа с одинаковыми названиями верщин но с разными экземплярами 
-			if (graph1.AdjacencyList.Keys.Intersect(graph2.AdjacencyList.Keys).Any())   //проверка на уникальность не сработает(хорошо это или плохо?
-				return null;                                                            //- ведь по сути вершины то разные хоть и называются одинаково)
+		public static Graph? UnionGraph(Graph graph1, Graph graph2){	
+			Dictionary<string, List<(string, double)>> AdjList = new();	
+			if (graph1.AdjacencyList.Keys.Intersect(graph2.AdjacencyList.Keys).Any())   
+				return null;                                                            
 			foreach (var item in graph1.AdjacencyList)
 				AdjList.Add(item.Key,item.Value);
 			foreach (var item in graph2.AdjacencyList)
@@ -155,6 +154,51 @@ namespace Graphs
 			AdjacencyList[vertex1].Remove(AdjacencyList[vertex1].First(x => x.Item1 == vertex2));
 			AdjacencyList[vertex2].Remove(AdjacencyList[vertex2].First(x => x.Item1 == vertex1));
 		}
+		internal bool DFS(string vertex, Dictionary<string,bool> visited) {
+			visited[vertex] = true;
+			foreach (var path in AdjacencyList[vertex])
+			{
+				if (!visited[path.Item1] && DFS(path.Item1, visited) || visited[path.Item1] == visited[vertex])
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		internal int StrongConnections() {
+			int Connections = 0;
+            Dictionary<string, bool> visited = new();
+            foreach (var vert in AdjacencyList)
+            {
+                visited.Add(vert.Key, false);
+            }
+			foreach (var vert in AdjacencyList.Keys) {
+				if (!visited[vert]) {
+					Connections++;
+					DFS(vert,visited);
+				}
+			}
+            return Connections;
+		}
+		internal bool IsCyclical() {
+            bool IsCyclical = false;
+            Dictionary<string, bool> visited = new();
+            foreach (var vert in AdjacencyList)
+            {
+                visited.Add(vert.Key, false);
+            }
+            foreach (var vert in AdjacencyList.Keys)
+            {
+                if (!visited[vert])
+                {
+                    IsCyclical = DFS(vert, visited);
+                }
+            }
+            return IsCyclical;
+        }
+		internal bool IsForest() {
+			return (IsCyclical() && StrongConnections() > 1);
+		}
 		internal double[][] CreateAdjacencyMatrix()
 		{
 			List<string> vertexList = AdjacencyList.Keys.ToList();
@@ -176,7 +220,7 @@ namespace Graphs
 		internal bool IsVertexExists(string id)
 		{
 			return AdjacencyList.Keys.Contains(id);
-        }
+		}
 		
 	}
 	class GraphUI {
@@ -241,7 +285,7 @@ namespace Graphs
 						WriteAdjacencyListToFile(Console.ReadLine(), graph);       //создание файла если он не существует?
 						break;
 					case "8":
-						return;
+						return;							//добавить вывод компонент связности и тип графа -дерево/лес
 					default:
 						Console.WriteLine("Выбрана несущесвующая операция");
 						break;
