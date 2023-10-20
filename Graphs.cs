@@ -61,7 +61,22 @@ namespace Graphs
 				}
 			}
 		}
-		//public static Graph CompleteGraph() { }
+		//public static Graph CompleteGraph(Graph graph) {
+		//	foreach (var item in graph.AdjacencyList)
+		//	{
+		//		AddVertex(new Vertex(item.Key.Id));
+		//	}
+		//	foreach (var value in graph.AdjacencyList)
+		//	{
+		//		foreach (var item in value.Value)
+		//		{
+		//			AddEdge(GetVertexById(value.Key.Id), GetVertexById(item.Item1.Id), item.Item2);
+		//		}
+		//	}
+
+
+
+		//}
 		//public static Graph AdditionalGraph() { }
 		//public static Graph GraphUnion() { }
 		//public static Graph GraphIntersection() { }
