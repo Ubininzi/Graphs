@@ -84,23 +84,47 @@ namespace Graphs
 			return new Graph(AdjList, graph.wheighted, graph.oriented);
 		}
 		public static Graph? UnionGraph(Graph graph1, Graph graph2){	
-			Dictionary<string, List<(string, double)>> AdjList = new();	
 			if (graph1.AdjacencyList.Keys.Intersect(graph2.AdjacencyList.Keys).Any())   
 				return null;                                                            
+			Dictionary<string, List<(string, double)>> AdjList = new();
 			foreach (var item in graph1.AdjacencyList)
-				AdjList.Add(item.Key,item.Value);
+			{
+				List<(string, double)> lst = new();
+				foreach (var item2 in item.Value)
+				{
+					lst.Add((new string(item2.Item1), item2.Item2));
+				}
+				AdjList.Add(item.Key, lst);
+			}
 			foreach (var item in graph2.AdjacencyList)
-				AdjList.Add(item.Key,item.Value);
+			{
+				List<(string, double)> lst = new();
+				foreach (var item2 in item.Value)
+				{
+					lst.Add((new string(item2.Item1), item2.Item2));
+				}
+				AdjList.Add(item.Key, lst);
+			}
 			return new Graph(AdjList, false, false);
 		}
 		public static Graph? IntersectionGraph(Graph graph1, Graph graph2) {
-			Dictionary<string, List<(string, double)>> AdjList = new();
 			if (graph1.AdjacencyList.Keys.Intersect(graph2.AdjacencyList.Keys).Any())
 				return null;
+			Dictionary<string, List<(string, double)>> AdjList = new();
 			foreach (var item in graph1.AdjacencyList) {
-				AdjList.Add(item.Key, item.Value); }
+				List<(string, double)> lst = new();
+				foreach (var item2 in item.Value) {
+					lst.Add((new string(item2.Item1), item2.Item2));
+				}
+				AdjList.Add(item.Key, lst); }
 			foreach (var item in graph2.AdjacencyList) {
-				AdjList.Add(item.Key, item.Value); }
+				List<(string, double)> lst = new();
+				foreach (var item2 in item.Value)
+				{
+					lst.Add((new string(item2.Item1), item2.Item2));
+				}
+				AdjList.Add(item.Key, lst);
+			}
 			Graph gr = new Graph(AdjList, false, false);
 			foreach (var item1 in graph1.AdjacencyList)
 			{
@@ -165,46 +189,46 @@ namespace Graphs
 				else if (visited[path.Item1] == 0)
 				{
 					DFS(path.Item1, vertex, visited, ref HasCycle);
-                }
-                else if (visited[path.Item1] == 1)
-                {
+				}
+				else if (visited[path.Item1] == 1)
+				{
 					HasCycle = true;
-                }
+				}
 			}
 			visited[vertex] = 2;
 		}
 		internal int StrongConnections() {
 			int Connections = 0;
 			bool hasCycle = false;
-            Dictionary<string, int> visited = new();
-            foreach (var vert in AdjacencyList)
-            {
-                visited.Add(vert.Key, 0);
-            }
+			Dictionary<string, int> visited = new();
+			foreach (var vert in AdjacencyList)
+			{
+				visited.Add(vert.Key, 0);
+			}
 			foreach (var vert in AdjacencyList.Keys) {
 				if (visited[vert] == 0) {
 					Connections++;
 					DFS(vert, vert, visited, ref hasCycle);
 				}
 			}
-            return Connections;
+			return Connections;
 		}
 		internal bool IsCyclical() {
-            bool IsCyclical = false;
-            Dictionary<string, int> visited = new();
-            foreach (var vert in AdjacencyList)
-            {
-                visited.Add(vert.Key, 0);
-            }
-            foreach (var vert in AdjacencyList.Keys)
-            {
-                if (visited[vert] == 0)
-                {
-                    DFS(vert, vert, visited, ref IsCyclical);
-                }
-            }
-            return IsCyclical;
-        }
+			bool IsCyclical = false;
+			Dictionary<string, int> visited = new();
+			foreach (var vert in AdjacencyList)
+			{
+				visited.Add(vert.Key, 0);
+			}
+			foreach (var vert in AdjacencyList.Keys)
+			{
+				if (visited[vert] == 0)
+				{
+					DFS(vert, vert, visited, ref IsCyclical);
+				}
+			}
+			return IsCyclical;
+		}
 		internal bool IsForest() {
 			return (StrongConnections() > 1 && !IsCyclical());
 		}
@@ -229,6 +253,30 @@ namespace Graphs
 		internal bool IsVertexExists(string id)
 		{
 			return AdjacencyList.Keys.Contains(id);
+		}
+		internal static Graph Kruskal(Graph graph) { 
+			Graph res = new Graph(true,false);
+			foreach (string vert in graph.AdjacencyList.Keys)
+			{
+				res.AddVertex(vert);
+			}
+			Dictionary<(string, string), double> dict = new();
+			foreach (var vertex in graph.AdjacencyList)
+			{
+				foreach (var adjVert in vertex.Value)
+				{
+					dict.Add((vertex.Key,adjVert.Item1),adjVert.Item2);
+				}
+			}
+			dict = dict.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+			foreach (var Edge in dict) {
+				res.AddEdge(Edge.Key.Item1,Edge.Key.Item2,Edge.Value);
+				if (res.IsCyclical())
+				{
+					res.RemoveEdge(Edge.Key.Item1, Edge.Key.Item2);
+				}
+			}
+			return res;
 		}
 		
 	}
@@ -299,13 +347,13 @@ namespace Graphs
 						Console.WriteLine(graph.StrongConnections());
 						break;
 					case "9":
-                        if (graph.IsForest())
-                        {
+						if (graph.IsForest())
+						{
 							Console.WriteLine("граф является лесом");
 							break;
-                        }
-                        if (!graph.IsCyclical())
-                        {
+						}
+						if (!graph.IsCyclical())
+						{
 							Console.WriteLine("граф является деревом");
 							break;
 						}
