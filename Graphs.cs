@@ -154,50 +154,59 @@ namespace Graphs
 			AdjacencyList[vertex1].Remove(AdjacencyList[vertex1].First(x => x.Item1 == vertex2));
 			AdjacencyList[vertex2].Remove(AdjacencyList[vertex2].First(x => x.Item1 == vertex1));
 		}
-		internal bool DFS(string vertex, Dictionary<string,bool> visited) {
-			visited[vertex] = true;
+		internal void DFS(string vertex, string from, Dictionary<string,int> visited, ref bool HasCycle) {
+			visited[vertex] = 1;
 			foreach (var path in AdjacencyList[vertex])
 			{
-				if (!visited[path.Item1] && DFS(path.Item1, visited) || visited[path.Item1] == visited[vertex])
+				if (path.Item1 == from)
 				{
-					return true;
+					continue;
 				}
+				else if (visited[path.Item1] == 0)
+				{
+					DFS(path.Item1, vertex, visited, ref HasCycle);
+                }
+                else if (visited[path.Item1] == 1)
+                {
+					HasCycle = true;
+                }
 			}
-			return false;
+			visited[vertex] = 2;
 		}
 		internal int StrongConnections() {
 			int Connections = 0;
-            Dictionary<string, bool> visited = new();
+			bool hasCycle = false;
+            Dictionary<string, int> visited = new();
             foreach (var vert in AdjacencyList)
             {
-                visited.Add(vert.Key, false);
+                visited.Add(vert.Key, 0);
             }
 			foreach (var vert in AdjacencyList.Keys) {
-				if (!visited[vert]) {
+				if (visited[vert] == 0) {
 					Connections++;
-					DFS(vert,visited);
+					DFS(vert, vert, visited, ref hasCycle);
 				}
 			}
             return Connections;
 		}
 		internal bool IsCyclical() {
             bool IsCyclical = false;
-            Dictionary<string, bool> visited = new();
+            Dictionary<string, int> visited = new();
             foreach (var vert in AdjacencyList)
             {
-                visited.Add(vert.Key, false);
+                visited.Add(vert.Key, 0);
             }
             foreach (var vert in AdjacencyList.Keys)
             {
-                if (!visited[vert])
+                if (visited[vert] == 0)
                 {
-                    IsCyclical = DFS(vert, visited);
+                    DFS(vert, vert, visited, ref IsCyclical);
                 }
             }
             return IsCyclical;
         }
 		internal bool IsForest() {
-			return (IsCyclical() && StrongConnections() > 1);
+			return (StrongConnections() > 1 && !IsCyclical());
 		}
 		internal double[][] CreateAdjacencyMatrix()
 		{
@@ -235,7 +244,9 @@ namespace Graphs
 				"5. Вывести список смежности\n" +
 				"6. Вывести матрицу смежности\n"+
 				"7. Сохранить список смежности в файл\n" +
-				"8. Выход");
+				"8. вывести количество компонент сильной связности\n" +
+				"9. определить деревянность графа\n" +
+				"10. Выход");
 			string id;
 			List<string> idList = new();
 			while (true)
@@ -285,7 +296,23 @@ namespace Graphs
 						WriteAdjacencyListToFile(Console.ReadLine(), graph);       //создание файла если он не существует?
 						break;
 					case "8":
-						return;							//добавить вывод компонент связности и тип графа -дерево/лес
+						Console.WriteLine(graph.StrongConnections());
+						break;
+					case "9":
+                        if (graph.IsForest())
+                        {
+							Console.WriteLine("граф является лесом");
+							break;
+                        }
+                        if (!graph.IsCyclical())
+                        {
+							Console.WriteLine("граф является деревом");
+							break;
+						}
+						Console.WriteLine("граф не является ни деревом ни лесом");
+						break;
+					case "10":
+						return;							
 					default:
 						Console.WriteLine("Выбрана несущесвующая операция");
 						break;
